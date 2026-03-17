@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, JetBrains_Mono } from "next/font/google";
+import { Navbar } from "@/components/ui/navbar";
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -26,9 +27,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${jetbrainsMono.variable} ${ibmPlexMono.variable} antialiased`}
+        className={`${jetbrainsMono.variable} ${ibmPlexMono.variable} bg-bg-page text-text-primary antialiased`}
       >
-        {children}
+        <Navbar links={[{ label: "leaderboard", href: "/leaderboard" }]} />
+        <main className="mx-auto w-full max-w-5xl px-10 py-20">{children}</main>
       </body>
     </html>
   );
