@@ -9,6 +9,7 @@ O DevRoast precisa persistir as submissões de código e seus respectivos result
 - **Pencil (design):** 4 telas analisadas — Code Input, Roast Results, Shame Leaderboard, OG Image
 - **Código:** `src/app/page.tsx`, `src/features/roast/`, `src/components/ui/`
 - **Decisões do produto:** roasts anônimos (sem auth), roast_mode não persiste
+- **Ver também:** `specs/ai-roast.md` — spec completa da integração com o Vercel AI SDK
 
 ---
 
@@ -130,7 +131,8 @@ export const roasts = pgTable("roasts", {
   score:         numeric("score", { precision: 3, scale: 1 }).notNull(), // ex: 3.5
   verdict:       verdictEnum("verdict").notNull(),
   roast_quote:   text("roast_quote").notNull(),
-  suggested_fix: text("suggested_fix"), // diff em formato unificado (pode ser null se não houver sugestão)
+  suggested_fix: text("suggested_fix"), // código melhorado gerado pelo LLM (pode ser null)
+  model_used:    varchar("model_used", { length: 100 }), // ex: "gpt-4o-mini", "claude-haiku-4-5"
   created_at:    timestamp("created_at", { withTimezone: true })
                    .notNull()
                    .defaultNow(),
@@ -144,7 +146,8 @@ export const roasts = pgTable("roasts", {
 | `score` | `numeric(3,1)` | Score de 0.0 a 10.0 (ex: `3.5`) |
 | `verdict` | `enum` | Classificação geral do código |
 | `roast_quote` | `text` | Frase de roast gerada |
-| `suggested_fix` | `text` nullable | Diff unificado com o código melhorado |
+| `suggested_fix` | `text` nullable | Código melhorado gerado pelo LLM |
+| `model_used` | `varchar(100)` nullable | Identificador do modelo usado (ex: `gpt-4o-mini`) |
 | `created_at` | `timestamp` | Data/hora da análise |
 
 ---
@@ -312,16 +315,25 @@ npm install -D drizzle-kit @types/pg
   - Insere em `submissions`
   - Retorna o `submission.id`
 - [ ] Criar Server Action `saveRoast` em `src/features/roast/actions/save-roast.ts`
-  - Recebe: `submissionId`, `score`, `verdict`, `roastQuote`, `suggestedFix`, `issues[]`
-  - Insere em `roasts` e `roast_issues` em transação
+  - Recebe: `submissionId`, `RoastOutput` (do schema Zod em `specs/ai-roast.md`), `modelUsed`
+  - Insere em `roasts` e `roast_issues` em transação (`db.transaction`)
+  - Retorna o `roast.id`
 - [ ] Criar query `getLeaderboard` em `src/features/leaderboard/queries/get-leaderboard.ts`
   - Join `submissions` + `roasts`
   - Ordena por `score ASC` (pior score = mais vergonhoso)
   - Retorna os campos necessários para o `TableRow` e os cards do leaderboard
-- [ ] Criar query `getRoastBySubmissionId` para a página de resultados
+- [ ] Criar query `getRoastById` em `src/features/roast/queries/get-roast-by-id.ts`
+  - Join `roasts` + `submissions` + `roast_issues`
+  - Usado pela página de resultados `/roast/[id]`
 - [ ] Substituir dados mockados em `src/app/page.tsx` (leaderboard preview) pelos dados reais
 
 ### Leaderboard page
 - [ ] Criar `src/app/leaderboard/page.tsx` (Server Component)
   - Usar `getLeaderboard()` para buscar as entradas
   - Renderizar os `Entry` cards conforme o design (Screen 3)
+
+### Roast results page
+- [ ] Criar `src/app/roast/[id]/page.tsx` (Server Component)
+  - Usar `getRoastById(id)` para buscar dados
+  - Renderizar Score Hero, Submitted Code, Analysis Grid e Diff Section (Screen 2 do design)
+  - Ver `specs/ai-roast.md` para o fluxo completo de geração e persistência
