@@ -5,7 +5,7 @@ import { CodeBlock } from "@/components/ui/code-block";
 import { DiffLine } from "@/components/ui/diff-line";
 import { Navbar } from "@/components/ui/navbar";
 import { ScoreRing } from "@/components/ui/score-ring";
-import { TableRow } from "@/components/ui/table-row";
+import { Table, TableHeader, TableRow } from "@/components/ui/table-row";
 import { ToggleDemo } from "./toggle-demo";
 
 function SectionTitle({ children }: { children: string }) {
@@ -136,29 +136,38 @@ export default async function ComponentsPage() {
         {/* table_row */}
         <section className="flex flex-col gap-6">
           <SectionTitle>table_row</SectionTitle>
-          <div className="flex flex-col">
-            <TableRow
-              rank="#1"
-              score="2.1"
-              scoreColor="text-accent-red"
-              codePreview="function calculateTotal(items) { var total = 0; ..."
-              language="javascript"
-            />
-            <TableRow
-              rank="#2"
-              score="5.4"
-              scoreColor="text-accent-amber"
-              codePreview="const result = await fetch(url).then(r => r.json())"
-              language="typescript"
-            />
-            <TableRow
-              rank="#3"
-              score="8.7"
-              scoreColor="text-accent-green"
-              codePreview="export function parseConfig(path: string): Config {"
-              language="typescript"
-            />
-          </div>
+          <Table>
+            <TableHeader>
+              <TableHeader.Cell className="w-10">#</TableHeader.Cell>
+              <TableHeader.Cell className="w-15">score</TableHeader.Cell>
+              <TableHeader.Cell className="flex-1">code</TableHeader.Cell>
+              <TableHeader.Cell className="w-25">lang</TableHeader.Cell>
+            </TableHeader>
+            <TableRow>
+              <TableRow.Rank>#1</TableRow.Rank>
+              <TableRow.Score className="text-accent-red">2.1</TableRow.Score>
+              <TableRow.Code>
+                function calculateTotal(items) {"{ var total = 0; ..."}
+              </TableRow.Code>
+              <TableRow.Language>javascript</TableRow.Language>
+            </TableRow>
+            <TableRow>
+              <TableRow.Rank>#2</TableRow.Rank>
+              <TableRow.Score className="text-accent-amber">5.4</TableRow.Score>
+              <TableRow.Code>
+                const result = await fetch(url).then(r =&gt; r.json())
+              </TableRow.Code>
+              <TableRow.Language>typescript</TableRow.Language>
+            </TableRow>
+            <TableRow>
+              <TableRow.Rank>#3</TableRow.Rank>
+              <TableRow.Score className="text-accent-green">8.7</TableRow.Score>
+              <TableRow.Code>
+                export function parseConfig(path: string): Config {"{ ... }"}
+              </TableRow.Code>
+              <TableRow.Language>typescript</TableRow.Language>
+            </TableRow>
+          </Table>
         </section>
 
         {/* navbar */}
