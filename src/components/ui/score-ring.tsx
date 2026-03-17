@@ -41,15 +41,15 @@ function ScoreRing({
           cy={center}
           r={radius}
           fill="none"
-          stroke="var(--border-primary)"
+          stroke="var(--color-border-primary)"
           strokeWidth={4}
         />
 
         {/* Gradient arc */}
         <defs>
           <linearGradient id="score-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="var(--accent-green)" />
-            <stop offset="100%" stopColor="var(--accent-amber)" />
+            <stop offset="0%" stopColor="var(--color-accent-green)" />
+            <stop offset="100%" stopColor="var(--color-accent-amber)" />
           </linearGradient>
         </defs>
         <circle
