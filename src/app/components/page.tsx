@@ -113,12 +113,9 @@ export default async function ComponentsPage() {
         {/* code_block */}
         <section className="flex flex-col gap-6">
           <SectionTitle>code_block</SectionTitle>
-          <CodeBlock
-            code={sampleCode}
-            lang="javascript"
-            filename="calculate.js"
-            className="max-w-[560px]"
-          />
+          <div className="max-w-[560px] border border-border-primary">
+            <CodeBlock code={sampleCode} />
+          </div>
         </section>
 
         {/* diff_lines */}
