@@ -92,3 +92,83 @@ body {
   color: #fafafa;
   font-family: var(--font-primary);
 }
+
+/* ── Highlight.js token mapping → design system ──────────────────────────── */
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-meta-keyword {
+  color: var(--color-syn-keyword);
+}
+
+.hljs-title,
+.hljs-title\.class_,
+.hljs-title\.function_ {
+  color: var(--color-syn-function);
+}
+
+.hljs-string,
+.hljs-attr,
+.hljs-template-variable,
+.hljs-template-tag {
+  color: var(--color-syn-string);
+}
+
+.hljs-variable,
+.hljs-name,
+.hljs-params {
+  color: var(--color-syn-variable);
+}
+
+.hljs-number,
+.hljs-literal {
+  color: var(--color-syn-number);
+}
+
+.hljs-type,
+.hljs-class,
+.hljs-built_in {
+  color: var(--color-syn-type);
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.hljs-property,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: var(--color-syn-property);
+}
+
+.hljs-operator,
+.hljs-punctuation {
+  color: var(--color-text-secondary);
+}
+
+.hljs-tag,
+.hljs-meta {
+  color: var(--color-syn-keyword);
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+  color: var(--color-syn-string);
+}
+
+.hljs-deletion {
+  color: var(--color-destructive);
+}
+
+.hljs-link {
+  color: var(--color-syn-string);
+  text-decoration: underline;
+}
+
+/* Placeholder text shown in the highlight layer when no code is typed */
+.placeholder-hint {
+  color: var(--color-text-tertiary);
+}

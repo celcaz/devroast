@@ -14,7 +14,6 @@ function CodeInputSection() {
       <CodeEditor
         value={code}
         onChange={setCode}
-        language="javascript"
         placeholder={"// paste your code here..."}
       />
 
