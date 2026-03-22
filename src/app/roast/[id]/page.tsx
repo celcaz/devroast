@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { CodeBlock } from "@/components/ui/code-block";
 import { DiffLine } from "@/components/ui/diff-line";
 import { ScoreRing } from "@/components/ui/score-ring";
-
-type RoastIssue = {
-  id: string;
-  severity: "critical" | "warning" | "good";
-  title: string;
-  description: string;
-};
+import { getRoastById } from "@/features/roast/queries/get-roast-by-id";
 
 type RoastDiffLine = {
   id: string;
@@ -20,101 +14,7 @@ type RoastDiffLine = {
   content: string;
 };
 
-type RoastDetailsData = {
-  score: number;
-  verdict: string;
-  roastQuote: string;
-  language: string;
-  lineCount: number;
-  code: string;
-  issues: RoastIssue[];
-  diffLines: RoastDiffLine[];
-};
-
-const staticRoastData: RoastDetailsData = {
-  score: 3.5,
-  verdict: "needs_serious_help",
-  roastQuote:
-    '"this code looks like it was written during a power outage... in 2005."',
-  language: "javascript",
-  lineCount: 16,
-  code: `function calculateTotal(items) {
-  var total = 0;
-  for (var i = 0; i < items.length; i++) {
-    total = total + items[i].price;
-  }
-
-  if (total > 100) {
-    console.log("discount applied");
-    total = total * 0.9;
-  }
-
-  // TODO: handle tax calculation
-  // TODO: handle currency conversion
-
-  return total;
-}`,
-  issues: [
-    {
-      id: "issue-1",
-      severity: "critical",
-      title: "using var instead of const/let",
-      description:
-        "var is function-scoped and leads to hoisting bugs. use const by default, let when reassignment is needed.",
-    },
-    {
-      id: "issue-2",
-      severity: "warning",
-      title: "imperative loop pattern",
-      description:
-        "for loops are verbose and error-prone. use .reduce() or .map() for cleaner, functional transformations.",
-    },
-    {
-      id: "issue-3",
-      severity: "good",
-      title: "clear naming conventions",
-      description:
-        "calculateTotal and items are descriptive names that communicate intent without extra comments.",
-    },
-    {
-      id: "issue-4",
-      severity: "good",
-      title: "single responsibility",
-      description:
-        "the function does one thing well: calculates a total. no hidden side effects and no mixed concerns.",
-    },
-  ],
-  diffLines: [
-    {
-      id: "line-1",
-      variant: "context",
-      content: "function calculateTotal(items) {",
-    },
-    { id: "line-2", variant: "removed", content: "  var total = 0;" },
-    {
-      id: "line-3",
-      variant: "removed",
-      content: "  for (var i = 0; i < items.length; i++) {",
-    },
-    {
-      id: "line-4",
-      variant: "removed",
-      content: "    total = total + items[i].price;",
-    },
-    { id: "line-5", variant: "removed", content: "  }" },
-    { id: "line-6", variant: "removed", content: "  return total;" },
-    {
-      id: "line-7",
-      variant: "added",
-      content: "  return items.reduce((sum, item) => sum + item.price, 0);",
-    },
-    { id: "line-8", variant: "context", content: "}" },
-  ],
-};
-
-function toBadgeVariant(
-  severity: RoastIssue["severity"],
-): "critical" | "warning" | "good" {
+function toBadgeVariant(severity: "critical" | "warning" | "good") {
   return severity;
 }
 
@@ -151,7 +51,28 @@ export async function generateMetadata({
 
 async function RoastDetailsContent({ params }: RoastPageProps) {
   const { id } = await params;
-  const roast = staticRoastData;
+  const roast = await getRoastById(id);
+
+  if (!roast) {
+    notFound();
+  }
+
+  const diffLines: RoastDiffLine[] = roast.suggestedFix
+    ? roast.suggestedFix
+        .split("\n")
+        .filter((line) => line.trim().length > 0)
+        .map((line, index) => ({
+          id: `fix-${index + 1}`,
+          variant: "added",
+          content: line,
+        }))
+    : [
+        {
+          id: "fix-empty",
+          variant: "context",
+          content: "// no suggested fix provided",
+        },
+      ];
 
   return (
     <div className="flex flex-col gap-10">
@@ -176,9 +97,9 @@ async function RoastDetailsContent({ params }: RoastPageProps) {
           </div>
 
           <div className="pt-1">
-            <Button variant="outline" size="sm">
-              $ share_roast
-            </Button>
+            <span className="font-primary text-xs text-text-tertiary">
+              {"// share_roast fora do escopo da v1"}
+            </span>
           </div>
         </div>
       </section>
@@ -247,7 +168,7 @@ async function RoastDetailsContent({ params }: RoastPageProps) {
           </div>
 
           <div className="flex flex-col py-1">
-            {roast.diffLines.map((line) => (
+            {diffLines.map((line) => (
               <DiffLine key={line.id} variant={line.variant}>
                 {line.content}
               </DiffLine>
@@ -258,9 +179,7 @@ async function RoastDetailsContent({ params }: RoastPageProps) {
         <p
           className={`font-secondary text-xs ${verdictToneClass(roast.verdict)}`}
         >
-          {
-            "// dados estaticos por enquanto; em breve esta pagina buscara o roast real pelo id"
-          }
+          {"// roast real carregado do banco"}
         </p>
       </section>
     </div>

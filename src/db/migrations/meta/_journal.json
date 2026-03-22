@@ -8,6 +8,13 @@
       "when": 1773857815625,
       "tag": "0000_violet_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774200497431,
+      "tag": "0001_shocking_prism",
+      "breakpoints": true
     }
   ]
 }

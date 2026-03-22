@@ -80,9 +80,18 @@ export const roastIssues = pgTable("roast_issues", {
   order: integer().notNull().default(0),
 });
 
+export const rateLimitWindows = pgTable("rate_limit_windows", {
+  keyHash: varchar({ length: 128 }).primaryKey(),
+  windowStartedAt: timestamp({ withTimezone: true }).notNull(),
+  count: integer().notNull().default(0),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
+
 export type InsertSubmission = typeof submissions.$inferInsert;
 export type SelectSubmission = typeof submissions.$inferSelect;
 export type InsertRoast = typeof roasts.$inferInsert;
 export type SelectRoast = typeof roasts.$inferSelect;
 export type InsertRoastIssue = typeof roastIssues.$inferInsert;
 export type SelectRoastIssue = typeof roastIssues.$inferSelect;
+export type InsertRateLimitWindow = typeof rateLimitWindows.$inferInsert;
+export type SelectRateLimitWindow = typeof rateLimitWindows.$inferSelect;
