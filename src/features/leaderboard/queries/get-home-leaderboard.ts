@@ -2,33 +2,28 @@ import { asc, count, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { roasts, submissions } from "@/db/schema";
 
-type LeaderboardEntry = {
+type HomeLeaderboardEntry = {
   roastId: string;
-  submissionId: string;
+  rank: number;
   score: number;
   language: string;
-  lineCount: number;
   code: string;
-  createdAt: Date;
 };
 
-type LeaderboardData = {
-  entries: LeaderboardEntry[];
-  totalSubmissions: number;
+type HomeLeaderboardData = {
+  entries: HomeLeaderboardEntry[];
+  totalRoasts: number;
   averageScore: number;
 };
 
-async function getLeaderboard(limit = 20): Promise<LeaderboardData> {
+async function getHomeLeaderboard(limit = 3): Promise<HomeLeaderboardData> {
   const [rows, statsResult] = await Promise.all([
     db
       .select({
         roastId: roasts.id,
-        submissionId: submissions.id,
         score: roasts.score,
         language: submissions.language,
-        lineCount: submissions.lineCount,
         code: submissions.code,
-        createdAt: roasts.createdAt,
       })
       .from(roasts)
       .innerJoin(submissions, eq(submissions.id, roasts.submissionId))
@@ -36,31 +31,28 @@ async function getLeaderboard(limit = 20): Promise<LeaderboardData> {
       .limit(limit),
     db
       .select({
-        totalSubmissions: count(submissions.id),
+        totalRoasts: count(roasts.id),
         averageScore: sql<number>`coalesce(avg(${roasts.score}), 0)::float`,
       })
-      .from(roasts)
-      .innerJoin(submissions, eq(submissions.id, roasts.submissionId)),
+      .from(roasts),
   ]);
 
   const [stats] = statsResult;
 
-  const entries = rows.map((row) => ({
+  const entries = rows.map((row, index) => ({
     roastId: row.roastId,
-    submissionId: row.submissionId,
+    rank: index + 1,
     score: Number(row.score),
     language: row.language,
-    lineCount: row.lineCount,
     code: row.code,
-    createdAt: row.createdAt,
   }));
 
   return {
     entries,
-    totalSubmissions: Number(stats.totalSubmissions),
+    totalRoasts: Number(stats.totalRoasts),
     averageScore: Number(stats.averageScore),
   };
 }
 
-export type { LeaderboardData, LeaderboardEntry };
-export { getLeaderboard };
+export type { HomeLeaderboardData, HomeLeaderboardEntry };
+export { getHomeLeaderboard };

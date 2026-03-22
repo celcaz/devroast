@@ -6,6 +6,7 @@ config({ path: ".env.local" });
 config();
 
 const TOTAL_ROASTS = 100;
+const MIN_CODE_LINES = 8;
 
 const issueTitles = {
   critical: [
@@ -135,9 +136,87 @@ function pickLanguage() {
   return faker.helpers.arrayElement(submissions.language.enumValues);
 }
 
+const longCodeSamples: Record<string, string[]> = {
+  javascript: [
+    "async function getLeaderboard(client) {\n  const rows = await client.query('SELECT id, score FROM roasts ORDER BY score ASC LIMIT 20');\n  return rows.rows.map((row, index) => ({\n    rank: index + 1,\n    id: row.id,\n    score: Number(row.score),\n  }));\n}\n\nexport { getLeaderboard };",
+  ],
+  typescript: [
+    "type Roast = { id: string; score: number; language: string };\n\nfunction normalizeRoasts(rows: Roast[]) {\n  return rows\n    .filter((row) => row.score >= 0)\n    .sort((a, b) => a.score - b.score)\n    .slice(0, 20)\n    .map((row, index) => ({ ...row, rank: index + 1 }));\n}\n\nexport { normalizeRoasts };",
+  ],
+  python: [
+    "def worst_scores(items):\n    valid = [item for item in items if item.get('score') is not None]\n    ordered = sorted(valid, key=lambda item: item['score'])\n    top = ordered[:20]\n    result = []\n    for index, item in enumerate(top, start=1):\n        result.append({**item, 'rank': index})\n    return result",
+  ],
+  rust: [
+    "fn worst_scores(mut scores: Vec<f32>) -> Vec<(usize, f32)> {\n    scores.sort_by(|a, b| a.partial_cmp(b).unwrap());\n    let mut result = Vec::new();\n    for (index, score) in scores.iter().take(20).enumerate() {\n        result.push((index + 1, *score));\n    }\n    result\n}\n\nfn main() {\n    let _data = worst_scores(vec![2.1, 4.0, 1.3]);\n}",
+  ],
+  go: [
+    "func WorstScores(scores []float64) []float64 {\n  sort.Float64s(scores)\n  limit := 20\n  if len(scores) < limit {\n    limit = len(scores)\n  }\n  result := make([]float64, 0, limit)\n  for i := 0; i < limit; i++ {\n    result = append(result, scores[i])\n  }\n  return result\n}",
+  ],
+  java: [
+    "public List<Double> worstScores(List<Double> scores) {\n  return scores.stream()\n    .filter(Objects::nonNull)\n    .sorted()\n    .limit(20)\n    .map(score -> Math.round(score * 10.0) / 10.0)\n    .collect(Collectors.toList());\n}\n\npublic void logTop(List<Double> scores) {\n  System.out.println(worstScores(scores));\n}",
+  ],
+  cpp: [
+    'std::vector<double> worstScores(std::vector<double> scores) {\n  std::sort(scores.begin(), scores.end());\n  if (scores.size() > 20) {\n    scores.resize(20);\n  }\n  for (size_t i = 0; i < scores.size(); ++i) {\n    std::cout << i + 1 << ": " << scores[i] << std::endl;\n  }\n  return scores;\n}',
+  ],
+  c: [
+    'void print_worst_scores(double *scores, int count) {\n  for (int i = 0; i < count - 1; i++) {\n    for (int j = i + 1; j < count; j++) {\n      if (scores[j] < scores[i]) {\n        double temp = scores[i];\n        scores[i] = scores[j];\n        scores[j] = temp;\n      }\n    }\n  }\n  for (int i = 0; i < count && i < 20; i++) printf("%d %.1f\\n", i + 1, scores[i]);\n}',
+  ],
+  csharp: [
+    'public static IReadOnlyList<double> WorstScores(IEnumerable<double> scores)\n{\n    return scores\n        .Where(score => score >= 0)\n        .OrderBy(score => score)\n        .Take(20)\n        .Select(score => Math.Round(score, 1))\n        .ToList();\n}\n\nConsole.WriteLine(string.Join(", ", WorstScores(new[] { 2.1, 1.4, 9.0 })));',
+  ],
+  php: [
+    "<?php\nfunction worst_scores(array $scores): array {\n  sort($scores);\n  $top = array_slice($scores, 0, 20);\n  $result = [];\n  foreach ($top as $index => $score) {\n    $result[] = ['rank' => $index + 1, 'score' => round($score, 1)];\n  }\n  return $result;\n}\n",
+  ],
+  ruby: [
+    "def worst_scores(scores)\n  normalized = scores.compact.map(&:to_f)\n  ordered = normalized.sort\n  top = ordered.take(20)\n  top.each_with_index.map do |score, index|\n    { rank: index + 1, score: score.round(1) }\n  end\nend\n\nputs worst_scores([2.1, 1.9, 4.0]).inspect",
+  ],
+  swift: [
+    "func worstScores(_ scores: [Double]) -> [(Int, Double)] {\n  let ordered = scores.sorted()\n  let top = Array(ordered.prefix(20))\n  return top.enumerated().map { index, score in\n    (index + 1, (score * 10).rounded() / 10)\n  }\n}\n\nlet result = worstScores([2.1, 1.1, 9.9])\nprint(result)",
+  ],
+  kotlin: [
+    "fun worstScores(scores: List<Double>): List<Pair<Int, Double>> {\n  return scores\n    .filter { it >= 0 }\n    .sorted()\n    .take(20)\n    .mapIndexed { index, score ->\n      Pair(index + 1, kotlin.math.round(score * 10) / 10)\n    }\n}\n\nprintln(worstScores(listOf(2.1, 1.4, 5.7)))",
+  ],
+  sql: [
+    "WITH ranked_roasts AS (\n  SELECT\n    r.id,\n    r.score,\n    s.language,\n    ROW_NUMBER() OVER (ORDER BY r.score ASC, r.created_at ASC) AS rank\n  FROM roasts r\n  JOIN submissions s ON s.id = r.submission_id\n)\nSELECT id, score, language, rank\nFROM ranked_roasts\nWHERE rank <= 20;",
+  ],
+  html: [
+    '<section class="leaderboard">\n  <header>\n    <h1>Shame Leaderboard</h1>\n    <p>Top 20 worst scores</p>\n  </header>\n  <ol>\n    <li data-rank="1">score: 1.2</li>\n    <li data-rank="2">score: 1.8</li>\n  </ol>\n</section>',
+  ],
+  css: [
+    ".leaderboard {\n  display: grid;\n  gap: 12px;\n  padding: 16px;\n  border: 1px solid var(--color-border-primary);\n}\n\n.leaderboard__row {\n  display: grid;\n  grid-template-columns: 40px 80px 1fr 120px;\n  align-items: center;\n}",
+  ],
+  json: [
+    '{\n  "leaderboard": [\n    { "rank": 1, "score": 1.2, "language": "javascript" },\n    { "rank": 2, "score": 1.8, "language": "typescript" }\n  ],\n  "total": 20,\n  "averageScore": 4.2,\n  "generatedAt": "2026-03-22T12:00:00Z"\n}',
+  ],
+  yaml: [
+    "leaderboard:\n  limit: 20\n  sort:\n    by: score\n    direction: asc\n  entries:\n    - rank: 1\n      score: 1.2\n      language: javascript\n    - rank: 2\n      score: 1.8\n      language: typescript",
+  ],
+  bash: [
+    '#!/usr/bin/env bash\nset -euo pipefail\n\npsql "$DATABASE_URL" <<\'SQL\'\nSELECT id, score\nFROM roasts\nORDER BY score ASC, created_at ASC\nLIMIT 20;\nSQL\n\necho "done"',
+  ],
+  markdown: [
+    "# Shame Leaderboard\n\n## Rules\n\n- Sort by lower score first\n- Show up to 20 entries\n- Keep full code available\n\n## Notes\n\nUse SSR and suspense for loading states.",
+  ],
+  plaintext: [
+    "leaderboard job started\nreading submissions table\njoining roasts table\nsorting by score ascending\nlimiting output to 20 rows\nnormalizing score values\nbuilding response payload\nrequest completed successfully",
+  ],
+};
+
+function lineCount(code: string) {
+  return code.replace(/\r\n/g, "\n").split("\n").length;
+}
+
 function buildCode(language: (typeof submissions.language.enumValues)[number]) {
   const samples = codeSamples[language] ?? codeSamples.plaintext;
-  return faker.helpers.arrayElement(samples);
+  const sample = faker.helpers.arrayElement(samples);
+
+  if (lineCount(sample) >= MIN_CODE_LINES) {
+    return sample;
+  }
+
+  const realisticSamples =
+    longCodeSamples[language] ?? longCodeSamples.plaintext;
+  return faker.helpers.arrayElement(realisticSamples);
 }
 
 function scoreToVerdict(

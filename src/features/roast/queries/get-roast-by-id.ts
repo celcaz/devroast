@@ -21,7 +21,7 @@ type RoastDetails = {
     | "getting_there"
     | "actually_decent";
   roastQuote: string;
-  suggestedFix: string | null;
+  suggestedFix: string;
   modelUsed: string | null;
   createdAt: Date;
   code: string;
@@ -72,7 +72,7 @@ async function getRoastById(id: string): Promise<RoastDetails | null> {
     score: Number(base.score),
     verdict: base.verdict,
     roastQuote: base.roastQuote,
-    suggestedFix: base.suggestedFix,
+    suggestedFix: base.suggestedFix ?? "",
     modelUsed: base.modelUsed,
     createdAt: base.createdAt,
     code: base.code,

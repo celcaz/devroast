@@ -1,5 +1,8 @@
-import { Table, TableHeader, TableRow } from "@/components/ui/table-row";
+import { Suspense } from "react";
+import { HomeLeaderboard } from "@/features/leaderboard/components/home-leaderboard";
+import { HomeLeaderboardSkeleton } from "@/features/leaderboard/components/home-leaderboard-skeleton";
 import { CodeInputSection } from "@/features/roast/components/code-input-section";
+import { HomeMetrics } from "@/features/roast/components/home-metrics";
 
 export default function Home() {
   return (
@@ -22,7 +25,7 @@ export default function Home() {
       </div>
 
       {/* Code Input */}
-      <CodeInputSection />
+      <CodeInputSection metricsSlot={<HomeMetrics />} />
 
       {/* Leaderboard Preview */}
       <div className="flex flex-col gap-6">
@@ -49,46 +52,9 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Table */}
-        <Table>
-          <TableHeader>
-            <TableHeader.Cell className="w-10">#</TableHeader.Cell>
-            <TableHeader.Cell className="w-15">score</TableHeader.Cell>
-            <TableHeader.Cell className="flex-1">code</TableHeader.Cell>
-            <TableHeader.Cell className="w-25">lang</TableHeader.Cell>
-          </TableHeader>
-          <TableRow>
-            <TableRow.Rank>1</TableRow.Rank>
-            <TableRow.Score className="text-accent-red">1.2</TableRow.Score>
-            <TableRow.Code>
-              eval(prompt(&quot;enter code&quot;)) · document.write(response) ·{" "}
-              {"// trust the user lol"}
-            </TableRow.Code>
-            <TableRow.Language>javascript</TableRow.Language>
-          </TableRow>
-          <TableRow>
-            <TableRow.Rank>2</TableRow.Rank>
-            <TableRow.Score className="text-accent-red">1.8</TableRow.Score>
-            <TableRow.Code>
-              if (x == true) {"{ return true; }"} else if (x == false){" "}
-              {"{ return false; }"} else {"{ return !false; }"}
-            </TableRow.Code>
-            <TableRow.Language>typescript</TableRow.Language>
-          </TableRow>
-          <TableRow>
-            <TableRow.Rank>3</TableRow.Rank>
-            <TableRow.Score className="text-accent-red">2.1</TableRow.Score>
-            <TableRow.Code>
-              SELECT * FROM users WHERE 1=1 --{"{ TODO: add authentication }"}
-            </TableRow.Code>
-            <TableRow.Language>sql</TableRow.Language>
-          </TableRow>
-        </Table>
-
-        {/* Fade hint */}
-        <p className="text-center font-secondary text-xs text-text-tertiary">
-          showing top 3 of 2,847 · view full leaderboard &gt;&gt;
-        </p>
+        <Suspense fallback={<HomeLeaderboardSkeleton />}>
+          <HomeLeaderboard />
+        </Suspense>
       </div>
     </div>
   );
