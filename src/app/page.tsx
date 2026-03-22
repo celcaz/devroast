@@ -1,5 +1,6 @@
 import { Table, TableHeader, TableRow } from "@/components/ui/table-row";
 import { CodeInputSection } from "@/features/roast/components/code-input-section";
+import { HomeMetrics } from "@/features/roast/components/home-metrics";
 
 export default function Home() {
   return (
@@ -22,7 +23,7 @@ export default function Home() {
       </div>
 
       {/* Code Input */}
-      <CodeInputSection />
+      <CodeInputSection metricsSlot={<HomeMetrics />} />
 
       {/* Leaderboard Preview */}
       <div className="flex flex-col gap-6">

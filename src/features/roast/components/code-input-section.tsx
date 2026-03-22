@@ -1,11 +1,16 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { CodeEditor } from "./code-editor";
 
-function CodeInputSection() {
+type CodeInputSectionProps = {
+  metricsSlot?: ReactNode;
+};
+
+function CodeInputSection({ metricsSlot }: CodeInputSectionProps) {
   const [code, setCode] = useState("");
   const [roastMode, setRoastMode] = useState(true);
 
@@ -35,15 +40,7 @@ function CodeInputSection() {
       </div>
 
       {/* Footer stats */}
-      <div className="flex items-center justify-center gap-6">
-        <span className="font-secondary text-xs text-text-tertiary">
-          2,847 codes roasted
-        </span>
-        <span className="font-primary text-xs text-text-tertiary">·</span>
-        <span className="font-secondary text-xs text-text-tertiary">
-          avg score: 4.2/10
-        </span>
-      </div>
+      {metricsSlot}
     </div>
   );
 }

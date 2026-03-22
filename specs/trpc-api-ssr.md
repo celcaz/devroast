@@ -7,61 +7,63 @@ Hoje o projeto usa queries/actions diretas no app. Queremos adotar tRPC como cam
 ## Escopo
 
 - Em escopo:
-  - Setup de tRPC server + client no App Router.
-  - Integração com TanStack Query para hidratação SSR.
-  - Router inicial com procedimentos para `leaderboard` e `roast by id`.
-  - Migração das páginas SSR para consumir tRPC.
+  - Setup inicial de tRPC server no App Router.
+  - Router inicial com procedure `metrics.homepage`.
+  - Integração na homepage para métricas (`codes roasted` e `avg score`).
+  - Renderização via Server Components com `Suspense` e skeleton de loading.
+  - Animação dos números com NumberFlow após carregamento.
 - Fora de escopo:
+  - Setup de client tRPC + TanStack Query/hidratação SSR nesta fase.
+  - Procedures `leaderboard.list` e `roast.byId` nesta fase.
   - Autenticação/autorização.
   - Realtime/subscriptions.
+  - Migração das páginas `leaderboard` e `roast/[id]` nesta fase.
   - Migração completa de todas as Server Actions existentes.
 
 ## Abordagem
 
-- Usar padrão oficial tRPC v11 para RSC:
-  - `createTRPCOptionsProxy` no servidor (prefetch em Server Components).
-  - `HydrationBoundary` + `dehydrate` para cache SSR → client.
-  - Provider client com `@trpc/tanstack-react-query`.
-- Manter fonte de dados atual (Drizzle/queries existentes), encapsulando em procedures tRPC.
-- Para dados necessários apenas no servidor, usar `caller` dedicado (sem depender do cache cliente).
+- Implementar fase 1 mínima com tRPC server-only:
+  - `createCaller` para consumo direto em Server Components.
+  - Route handler em `/api/trpc` para GET/POST.
+- Encapsular query de métricas de homepage em procedure `metrics.homepage`.
+- Na UI, usar `Suspense` + skeleton e NumberFlow em componente client para animação dos valores.
 
 ## Implementação
 
 - Dependências:
-  - adicionar: `@trpc/server`, `@trpc/client`, `@trpc/tanstack-react-query`, `@tanstack/react-query`, `zod`, `server-only`, `client-only`.
-- Estrutura base (novos arquivos):
+  - adicionar: `@trpc/server`, `zod`, `server-only`, `@number-flow/react`.
+- Estrutura base tRPC (novos arquivos):
   - `src/trpc/init.ts` (initTRPC, contexto, helpers de router/procedure)
   - `src/trpc/routers/_app.ts` (root router + export `AppRouter`)
-  - `src/trpc/routers/leaderboard.ts` (procedures de leaderboard)
-  - `src/trpc/routers/roast.ts` (procedures de roast)
-  - `src/trpc/query-client.ts` (factory do QueryClient, defaults SSR)
-  - `src/trpc/client.tsx` (TRPCReactProvider + `useTRPC`)
-  - `src/trpc/server.tsx` (`trpc`, `getQueryClient`, `HydrateClient`, `prefetch`, `caller`)
+  - `src/trpc/routers/metrics.ts` (procedure `metrics.homepage`)
+  - `src/trpc/server.ts` (`getCaller` para Server Components)
   - `src/app/api/trpc/[trpc]/route.ts` (fetch adapter GET/POST)
+- Query de dados:
+  - `src/features/leaderboard/queries/get-home-metrics.ts` (`count` de roasts + `avg` de score)
 - Arquivos alterados:
-  - `src/app/layout.tsx` (montar `TRPCReactProvider`)
-  - `src/app/leaderboard/page.tsx` (prefetch tRPC SSR + hydrate)
-  - `src/app/roast/[id]/page.tsx` (buscar por id via tRPC em SSR)
-- Contratos iniciais:
-  - `leaderboard.list` (`input: { limit?: number }`, output tipado para cards/tabela)
-  - `roast.byId` (`input: { id: string }`, output tipado do roast completo)
+  - `src/app/page.tsx` (Suspense + fallback skeleton para métricas)
+  - `src/features/roast/components/code-input-section.tsx` (slot para métricas)
+  - `src/features/roast/components/home-metrics.tsx` (Server Component)
+  - `src/features/roast/components/home-metrics-skeleton.tsx` (loading state)
+  - `src/features/roast/components/animated-metric-number.tsx` (NumberFlow em client component)
+- Contrato desta fase:
+  - `metrics.homepage` (`input: void`, `output: { totalRoastedCodes: number; averageScore: number }`)
 
 ## Critérios de aceite
 
 - `pnpm dev` sobe com rota tRPC funcional em `/api/trpc`.
-- Páginas `leaderboard` e `roast/[id]` usam tRPC no SSR sem quebrar layout.
-- Dados prefetched no servidor são hidratados no client (sem refetch imediato indesejado).
-- Tipagem fim-a-fim funcionando (input/output inferidos sem tipos duplicados nas páginas).
+- Homepage mostra métricas vindas de `metrics.homepage`.
+- Bloco de métricas usa Server Component com `Suspense` e skeleton no loading.
+- Números animam de `0` até o valor carregado usando NumberFlow.
+- Tipagem fim-a-fim da procedure funciona sem tipos duplicados na página.
 - `pnpm check` e `pnpm build` passam.
 
 ## Checklist
 
-- [ ] Instalar dependências do tRPC + TanStack Query.
-- [ ] Criar base tRPC (`init`, routers, route handler).
-- [ ] Criar camada client/server (`client.tsx`, `server.tsx`, `query-client.ts`).
-- [ ] Montar provider no `layout.tsx`.
-- [ ] Implementar procedures `leaderboard.list` e `roast.byId` usando queries atuais.
-- [ ] Migrar `src/app/leaderboard/page.tsx` para prefetch + hydrate via tRPC.
-- [ ] Migrar `src/app/roast/[id]/page.tsx` para buscar por `id` via tRPC.
-- [ ] Validar SSR/RSC (dehydrate/hydration) e ausência de regressão visual.
+- [ ] Instalar dependências mínimas de tRPC server + NumberFlow.
+- [ ] Criar base tRPC (`init`, `appRouter`, `metricsRouter`, route handler).
+- [ ] Implementar query `get-home-metrics` e procedure `metrics.homepage`.
+- [ ] Integrar métricas na homepage com Server Component + `Suspense` + skeleton.
+- [ ] Animar números com NumberFlow em client component.
+- [ ] Validar ausência de regressão visual na homepage.
 - [ ] Validação final (`pnpm check` e `pnpm build`).
