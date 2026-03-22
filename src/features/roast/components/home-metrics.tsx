@@ -1,7 +1,11 @@
+import { cacheLife } from "next/cache";
 import { AnimatedMetricNumber } from "@/features/roast/components/animated-metric-number";
 import { getCaller } from "@/trpc/server";
 
 async function HomeMetrics() {
+  "use cache";
+  cacheLife("hours");
+
   const metrics = await getCaller().metrics.homepage();
 
   return (

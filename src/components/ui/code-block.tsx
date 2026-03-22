@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import { codeToHtml } from "shiki";
 
 type CodeBlockProps = {
@@ -6,6 +7,9 @@ type CodeBlockProps = {
 };
 
 async function CodeBlock({ code, language = "javascript" }: CodeBlockProps) {
+  "use cache";
+  cacheLife("hours");
+
   const normalizedLanguage = language.toLowerCase();
 
   const html = await codeToHtml(code, {

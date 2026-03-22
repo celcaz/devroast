@@ -1,6 +1,7 @@
+import { cacheLife } from "next/cache";
 import { CodeBlock } from "@/components/ui/code-block";
 import { Table, TableHeader } from "@/components/ui/table-row";
-import { HomeLeaderboardRowCollapsible } from "@/features/leaderboard/components/home-leaderboard-row-collapsible";
+import { LeaderboardRowCollapsible } from "@/features/leaderboard/components/leaderboard-row-collapsible";
 import { getCaller } from "@/trpc/server";
 
 function getScoreColor(score: number): string {
@@ -16,6 +17,9 @@ function getScoreColor(score: number): string {
 }
 
 async function HomeLeaderboard() {
+  "use cache";
+  cacheLife("hours");
+
   const { entries, totalRoasts } = await getCaller().leaderboard.homepage();
 
   if (entries.length === 0) {
@@ -53,7 +57,7 @@ async function HomeLeaderboard() {
         </TableHeader>
 
         {entries.map((entry) => (
-          <HomeLeaderboardRowCollapsible
+          <LeaderboardRowCollapsible
             key={entry.roastId}
             rank={entry.rank}
             score={entry.score}

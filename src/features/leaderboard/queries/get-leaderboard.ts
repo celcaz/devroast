@@ -8,7 +8,7 @@ type LeaderboardEntry = {
   score: number;
   language: string;
   lineCount: number;
-  codePreview: string;
+  code: string;
   createdAt: Date;
 };
 
@@ -18,17 +18,7 @@ type LeaderboardData = {
   averageScore: number;
 };
 
-function toCodePreview(code: string, maxLength = 120): string {
-  const normalized = code.replace(/\s+/g, " ").trim();
-
-  if (normalized.length <= maxLength) {
-    return normalized;
-  }
-
-  return `${normalized.slice(0, maxLength).trimEnd()}...`;
-}
-
-async function getLeaderboard(limit = 50): Promise<LeaderboardData> {
+async function getLeaderboard(limit = 20): Promise<LeaderboardData> {
   const [rows, statsResult] = await Promise.all([
     db
       .select({
@@ -61,7 +51,7 @@ async function getLeaderboard(limit = 50): Promise<LeaderboardData> {
     score: Number(row.score),
     language: row.language,
     lineCount: row.lineCount,
-    codePreview: toCodePreview(row.code),
+    code: row.code,
     createdAt: row.createdAt,
   }));
 

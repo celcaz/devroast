@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
@@ -148,7 +149,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function RoastDetailsPage({ params }: RoastPageProps) {
+async function RoastDetailsContent({ params }: RoastPageProps) {
   const { id } = await params;
   const roast = staticRoastData;
 
@@ -263,5 +264,13 @@ export default async function RoastDetailsPage({ params }: RoastPageProps) {
         </p>
       </section>
     </div>
+  );
+}
+
+export default function RoastDetailsPage({ params }: RoastPageProps) {
+  return (
+    <Suspense fallback={<div className="min-h-80" />}>
+      <RoastDetailsContent params={params} />
+    </Suspense>
   );
 }

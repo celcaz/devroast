@@ -6,7 +6,7 @@ import { useState } from "react";
 import { TableRow } from "@/components/ui/table-row";
 import { cn } from "@/lib/utils";
 
-type HomeLeaderboardRowCollapsibleProps = {
+type LeaderboardRowCollapsibleProps = {
   rank: number;
   score: number;
   scoreClassName: string;
@@ -15,14 +15,14 @@ type HomeLeaderboardRowCollapsibleProps = {
   codeSlot: ReactNode;
 };
 
-function HomeLeaderboardRowCollapsible({
+function LeaderboardRowCollapsible({
   rank,
   score,
   scoreClassName,
   language,
   snippet,
   codeSlot,
-}: HomeLeaderboardRowCollapsibleProps) {
+}: LeaderboardRowCollapsibleProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -62,5 +62,5 @@ function HomeLeaderboardRowCollapsible({
   );
 }
 
-export type { HomeLeaderboardRowCollapsibleProps };
-export { HomeLeaderboardRowCollapsible };
+export type { LeaderboardRowCollapsibleProps };
+export { LeaderboardRowCollapsible };
