@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,9 +22,10 @@ function isSupportedLanguage(
 function CodeInputSection({ metricsSlot }: CodeInputSectionProps) {
   const [code, setCode] = useState("");
   const [roastMode, setRoastMode] = useState(true);
-  const [language, setLanguage] = useState("auto");
+  const [language, setLanguage] = useState("javascript");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, startTransition] = useTransition();
+  const router = useRouter();
 
   function formatRetryAfter(seconds: number): string {
     const minutes = Math.ceil(seconds / 60);
@@ -47,17 +49,20 @@ function CodeInputSection({ metricsSlot }: CodeInputSectionProps) {
         roastMode,
       });
 
-      if (!result.ok) {
-        if (
-          result.error.code === "RATE_LIMIT" &&
-          typeof result.error.retryAfterSeconds === "number"
-        ) {
-          setSubmitError(formatRetryAfter(result.error.retryAfterSeconds));
-          return;
-        }
-
-        setSubmitError(result.error.message);
+      if (result.ok) {
+        router.push(`/roast/${result.roastId}`);
+        return;
       }
+
+      if (
+        result.error.code === "RATE_LIMIT" &&
+        typeof result.error.retryAfterSeconds === "number"
+      ) {
+        setSubmitError(formatRetryAfter(result.error.retryAfterSeconds));
+        return;
+      }
+
+      setSubmitError(result.error.message);
     });
   }
 

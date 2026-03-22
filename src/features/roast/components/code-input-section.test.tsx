@@ -10,6 +10,14 @@ vi.mock("@/features/roast/actions/create-roast", () => ({
   createRoastAction: createRoastActionMock,
 }));
 
+const pushMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushMock,
+  }),
+}));
+
 vi.mock("./code-editor", () => ({
   CodeEditor: ({
     value,
