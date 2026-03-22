@@ -1,4 +1,4 @@
-import { count, sql, avg } from "drizzle-orm";
+import { avg, count } from "drizzle-orm";
 import { db } from "@/db";
 import { roasts } from "@/db/schema";
 

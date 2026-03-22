@@ -2,12 +2,20 @@ import { codeToHtml } from "shiki";
 
 type CodeBlockProps = {
   code: string;
+  language?: string;
 };
 
-async function CodeBlock({ code }: CodeBlockProps) {
+async function CodeBlock({ code, language = "javascript" }: CodeBlockProps) {
+  const normalizedLanguage = language.toLowerCase();
+
   const html = await codeToHtml(code, {
-    lang: "javascript",
+    lang: normalizedLanguage,
     theme: "vesper",
+  }).catch(async () => {
+    return codeToHtml(code, {
+      lang: "plaintext",
+      theme: "vesper",
+    });
   });
 
   const lines = code.split("\n");
