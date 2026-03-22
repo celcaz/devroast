@@ -31,53 +31,47 @@ describe("createRoastAction", () => {
     }
   });
 
-  it("redirects on success", async () => {
-    const redirectImpl = vi.fn((path: string) => {
-      throw Object.assign(new Error("NEXT_REDIRECT"), {
-        digest: `NEXT_REDIRECT;${path}`,
-      });
-    });
-
-    await expect(
-      createRoastAction(
-        {
-          code: "const x = 1;",
+  it("returns roastId on success", async () => {
+    const result = await createRoastAction(
+      {
+        code: "const x = 1;",
+        language: "javascript",
+        roastMode: true,
+      },
+      {
+        headersImpl: async () => createHeaders(),
+        evaluateRateLimitWindowImpl: async () => ({ allowed: true }),
+        analyzeCodeImpl: async () => ({
+          score: 7,
+          verdict: "getting_there",
+          roastQuote: "close enough",
+          issues: [],
+          suggestedFix: "none",
+          modelUsed: "gpt-4.1-mini",
+        }),
+        submitCodeImpl: async () => ({
+          id: "sub_1",
           language: "javascript",
-          roastMode: true,
-        },
-        {
-          headersImpl: async () => createHeaders(),
-          evaluateRateLimitWindowImpl: async () => ({ allowed: true }),
-          analyzeCodeImpl: async () => ({
-            score: 7,
-            verdict: "getting_there",
-            roastQuote: "close enough",
-            issues: [],
-            suggestedFix: "none",
-            modelUsed: "gpt-4.1-mini",
-          }),
-          submitCodeImpl: async () => ({
-            id: "sub_1",
-            language: "javascript",
-            lineCount: 1,
-            createdAt: new Date(),
-          }),
-          saveRoastImpl: async () => ({
-            id: "roast_1",
-            submissionId: "sub_1",
-            score: "7.0",
-            verdict: "getting_there",
-            roastQuote: "close enough",
-            suggestedFix: "none",
-            modelUsed: "gpt-4.1-mini",
-            createdAt: new Date(),
-          }),
-          redirectImpl,
-        },
-      ),
-    ).rejects.toMatchObject({
-      digest: expect.stringMatching(/NEXT_REDIRECT;\/roast\/roast_1/),
-    });
+          lineCount: 1,
+          createdAt: new Date(),
+        }),
+        saveRoastImpl: async () => ({
+          id: "roast_1",
+          submissionId: "sub_1",
+          score: "7.0",
+          verdict: "getting_there",
+          roastQuote: "close enough",
+          suggestedFix: "none",
+          modelUsed: "gpt-4.1-mini",
+          createdAt: new Date(),
+        }),
+      },
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.roastId).toBe("roast_1");
+    }
   });
 
   it("returns AI_ERROR when provider fails and logs safe context", async () => {

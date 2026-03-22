@@ -1,7 +1,6 @@
 "use server";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import type { languageEnum } from "@/db/schema";
 import { createRoastInputSchema } from "@/features/roast/schemas/create-roast-input";
 import { analyzeCode } from "@/features/roast/services/analyze-code";
@@ -23,10 +22,13 @@ type CreateRoastActionError = {
 
 type CreateRoastActionResult =
   | {
+      ok: true;
+      roastId: string;
+    }
+  | {
       ok: false;
       error: CreateRoastActionError;
-    }
-  | never;
+    };
 
 type CreateRoastActionDeps = {
   evaluateRateLimitWindowImpl?: typeof evaluateRateLimitWindow;
@@ -40,7 +42,6 @@ type CreateRoastActionDeps = {
     output: Awaited<ReturnType<typeof analyzeCode>>;
     modelUsed?: string;
   }) => Promise<{ id: string }>;
-  redirectImpl?: typeof redirect;
   headersImpl?: typeof headers;
   now?: () => Date;
   logError?: (event: string, payload: Record<string, unknown>) => void;
@@ -56,16 +57,6 @@ function buildValidationError(message: string): CreateRoastActionResult {
   };
 }
 
-function isRedirectError(error: unknown): error is { digest: string } {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "digest" in error &&
-    typeof (error as { digest?: unknown }).digest === "string" &&
-    (error as { digest: string }).digest.includes("NEXT_REDIRECT")
-  );
-}
-
 async function createRoastAction(
   input: CreateRoastActionInput,
   deps: CreateRoastActionDeps = {},
@@ -75,7 +66,6 @@ async function createRoastAction(
   const analyzeCodeImpl = deps.analyzeCodeImpl ?? analyzeCode;
   const submitCodeImpl = deps.submitCodeImpl;
   const saveRoastImpl = deps.saveRoastImpl;
-  const redirectImpl = deps.redirectImpl ?? redirect;
   const headersImpl = deps.headersImpl ?? headers;
   const now = deps.now ?? (() => new Date());
   const logError =
@@ -141,12 +131,11 @@ async function createRoastAction(
       modelUsed: analysis.modelUsed,
     });
 
-    redirectImpl(`/roast/${roast.id}`);
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
+    return {
+      ok: true,
+      roastId: roast.id,
+    };
+  } catch (_error) {
     logError("roast_create_failed", {
       code: "AI_ERROR",
       language: parsed.data.language,
@@ -163,14 +152,6 @@ async function createRoastAction(
       },
     };
   }
-
-  return {
-    ok: false,
-    error: {
-      code: "AI_ERROR",
-      message: "nao foi possivel completar o redirect",
-    },
-  };
 }
 
 export type {
